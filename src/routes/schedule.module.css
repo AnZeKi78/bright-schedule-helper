@@ -1,0 +1,41 @@
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.75rem;
+  margin: 0;
+}
+.subtitle {
+  color: var(--color-muted-foreground);
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  max-width: 520px;
+}
+
+.addBtn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border: 0;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.addBtn:hover { opacity: 0.92; }
+
+.uploadSection {
+  margin-bottom: 1rem;
+}
