@@ -1,0 +1,76 @@
+.tableWrap {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.table thead th {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  background: var(--color-secondary);
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--color-border);
+}
+.table tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table tbody tr:hover { background: color-mix(in srgb, var(--color-secondary) 50%, transparent); }
+
+.teacherCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.timeCell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-foreground);
+}
+
+.subjectBlock {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  font-weight: 500;
+  border-left: 4px solid;
+}
+
+.actions { display: flex; gap: 0.4rem; justify-content: flex-end; }
+.btn {
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-foreground);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.btn:hover { background: var(--color-secondary); }
+.btnDanger { color: var(--color-destructive); border-color: color-mix(in srgb, var(--color-destructive) 35%, var(--color-border)); }
+.btnDanger:hover { background: color-mix(in srgb, var(--color-destructive) 10%, transparent); }
+
+.empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--color-muted-foreground);
+}
