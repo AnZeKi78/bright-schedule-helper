@@ -1,0 +1,108 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+.header { margin-bottom: 1.5rem; }
+.title { font-size: 1.75rem; margin: 0; }
+.sub { color: var(--color-muted-foreground); margin: 0.3rem 0 0; }
+
+.addRow {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+.input {
+  flex: 1;
+  height: 40px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  border-radius: 8px;
+  font-family: inherit;
+}
+.addBtn {
+  padding: 0 1.1rem;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.9rem;
+}
+.userCard {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.userHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.userName { font-weight: 700; font-size: 1rem; }
+.userRole { margin-top: 0.35rem; }
+.roleSelect {
+  height: 30px;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-size: 0.82rem;
+  font-family: inherit;
+}
+.removeBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-muted-foreground);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.removeBtn:hover { color: var(--color-destructive); }
+
+.subjectGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.subjectLabel {
+  font-size: 0.75rem;
+  color: var(--color-muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.subjectChips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.chip {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+.chip:hover { background: var(--color-secondary); }
+.chipActive {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border-color: var(--color-primary);
+}
+.muted { color: var(--color-muted-foreground); font-size: 0.85rem; }
+
+@media (max-width: 600px) {
+  .list { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,158 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: var(--color-background);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: saturate(180%) blur(8px);
+}
+
+.inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 0.875rem 1.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+  color: var(--color-foreground);
+}
+
+.logoMark {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.brandName {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.nav {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.navLink {
+  padding: 0.5rem 0.875rem;
+  border-radius: 6px;
+  color: var(--color-muted-foreground);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s;
+}
+.navLink:hover {
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+}
+.navLinkActive {
+  color: var(--color-primary);
+  background: var(--color-accent);
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.todayBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--color-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  color: var(--color-foreground);
+}
+.todayDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+.todayCount {
+  font-weight: 700;
+}
+.todayMuted {
+  color: var(--color-muted-foreground);
+}
+
+.iconBtn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.iconBtn:hover {
+  background: var(--color-secondary);
+}
+
+.primaryBtn {
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border: 0;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.primaryBtn:hover { opacity: 0.92; }
+
+.userChip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem 0.35rem 0.35rem;
+  border-radius: 999px;
+  background: var(--color-secondary);
+  font-size: 0.82rem;
+}
+.avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .inner { grid-template-columns: auto auto; gap: 0.75rem; }
+  .nav { grid-column: 1 / -1; order: 3; overflow-x: auto; }
+  .todayBadge { display: none; }
+}
