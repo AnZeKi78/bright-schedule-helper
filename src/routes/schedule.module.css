@@ -34,7 +34,29 @@
   cursor: pointer;
   font-size: 0.9rem;
 }
-.addBtn:hover { opacity: 0.92; }
+.addBtn:hover {
+  opacity: 0.92;
+}
+
+.generateBtn {
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border: 0;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.generateBtn:hover {
+  opacity: 0.92;
+}
+
+.generateBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
 
 .headerActions {
   display: flex;
@@ -54,4 +76,17 @@
   font-size: 0.9rem;
 }
 
-.secondaryBtn:hover { background: var(--color-accent); }
+.secondaryBtn:hover {
+  background: var(--color-accent);
+}
+
+.generationNotice {
+  margin: 0 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 32%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+  color: var(--color-foreground);
+  font-size: 0.9rem;
+  font-weight: 600;
+}

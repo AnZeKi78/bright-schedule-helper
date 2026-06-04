@@ -9,6 +9,7 @@ const ru: Dict = {
   "app.tagline": "Платформа управления расписанием преподавателей",
   "nav.dashboard": "Главная",
   "nav.schedule": "Расписание",
+  "nav.data": "Данные",
   "nav.admin": "Администрирование",
   "nav.login": "Войти",
   "nav.logout": "Выйти",
@@ -27,7 +28,8 @@ const ru: Dict = {
   "login.teacherName": "Имя преподавателя",
   "dashboard.greeting": "Здравствуйте",
   "dashboard.todayTitle": "Ваше расписание сегодня",
-  "dashboard.uploadHint": "Создавайте расписание вручную или генерируйте предмет на учебный год с учётом праздников и практики",
+  "dashboard.uploadHint":
+    "Создавайте расписание вручную или генерируйте предмет на учебный год с учётом праздников и практики",
   "dashboard.cta": "Перейти к расписанию",
   "schedule.title": "Расписание занятий",
   "schedule.add": "Добавить занятие",
@@ -88,6 +90,7 @@ const kk: Dict = {
   "app.tagline": "Оқытушылар кестесін басқару платформасы",
   "nav.dashboard": "Басты бет",
   "nav.schedule": "Кесте",
+  "nav.data": "Деректер",
   "nav.admin": "Әкімшілік",
   "nav.login": "Кіру",
   "nav.logout": "Шығу",
@@ -106,7 +109,8 @@ const kk: Dict = {
   "login.teacherName": "Оқытушының аты",
   "dashboard.greeting": "Сәлеметсіз бе",
   "dashboard.todayTitle": "Бүгінгі кестеңіз",
-  "dashboard.uploadHint": "Кестені қолмен жасаңыз немесе мереке мен практика күндерін ескеріп оқу жылына пән жасаңыз",
+  "dashboard.uploadHint":
+    "Кестені қолмен жасаңыз немесе мереке мен практика күндерін ескеріп оқу жылына пән жасаңыз",
   "dashboard.cta": "Кестеге өту",
   "schedule.title": "Сабақ кестесі",
   "schedule.add": "Сабақ қосу",
@@ -176,7 +180,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("ru");
 
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? (localStorage.getItem("locale") as Locale | null) : null;
+    const saved =
+      typeof window !== "undefined" ? (localStorage.getItem("locale") as Locale | null) : null;
     if (saved === "ru" || saved === "kk") setLocaleState(saved);
   }, []);
 
@@ -196,4 +201,12 @@ export function useI18n() {
   return ctx;
 }
 
-export const DAY_KEYS = ["day.mon", "day.tue", "day.wed", "day.thu", "day.fri", "day.sat", "day.sun"] as const;
+export const DAY_KEYS = [
+  "day.mon",
+  "day.tue",
+  "day.wed",
+  "day.thu",
+  "day.fri",
+  "day.sat",
+  "day.sun",
+] as const;

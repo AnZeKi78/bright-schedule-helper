@@ -27,7 +27,9 @@ export function Header() {
     const now = new Date();
     const isoToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const dayKey = jsDayToKey(now.getDay());
-    let visible = lessons.filter((lesson) => (lesson.date ? lesson.date === isoToday : lesson.day === dayKey));
+    let visible = lessons.filter((lesson) =>
+      lesson.date ? lesson.date === isoToday : lesson.day === dayKey,
+    );
     if (user?.role === "teacher" && user.subjects.length > 0) {
       visible = visible.filter((l) => user.subjects.includes(l.subject));
     }
@@ -38,10 +40,7 @@ export function Header() {
   const next = today.find((l) => l.time >= new Date().toTimeString().slice(0, 5)) ?? today[0];
 
   const navItem = (to: string, label: string) => (
-    <Link
-      to={to}
-      className={`${s.navLink} ${location.pathname === to ? s.navLinkActive : ""}`}
-    >
+    <Link to={to} className={`${s.navLink} ${location.pathname === to ? s.navLinkActive : ""}`}>
       {label}
     </Link>
   );
@@ -57,6 +56,7 @@ export function Header() {
         <nav className={s.nav}>
           {navItem("/", t("nav.dashboard"))}
           {navItem("/schedule", t("nav.schedule"))}
+          {user?.role === "admin" && navItem("/data", t("nav.data"))}
           {user?.role === "admin" && navItem("/admin", t("nav.admin"))}
         </nav>
 
