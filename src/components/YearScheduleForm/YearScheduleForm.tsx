@@ -4,14 +4,23 @@ import { getTimeLabel, LESSON_SLOTS } from "@/lib/lesson-slots";
 import {
   getKazakhstanHolidayPreset,
   LESSON_HOURS,
+  normalizeWeeklySlots,
   schedule,
   type DateRange,
   type SchedulePlanInput,
+  type WeeklyLessonSlot,
 } from "@/lib/schedule-generator";
-import type { SchedulePlan } from "@/lib/schedule-store";
+import type { DayKey, SchedulePlan } from "@/lib/schedule-store";
 import s from "./YearScheduleForm.module.css";
 
 const thisYear = new Date().getFullYear();
+const dayOptions: Array<{ key: DayKey; label: string }> = [
+  { key: "mon", label: "Понедельник" },
+  { key: "tue", label: "Вторник" },
+  { key: "wed", label: "Среда" },
+  { key: "thu", label: "Четверг" },
+  { key: "fri", label: "Пятница" },
+];
 
 const emptyDraft: SchedulePlanInput = {
   subject: "",
@@ -21,17 +30,40 @@ const emptyDraft: SchedulePlanInput = {
   room: "",
   startDate: `${thisYear}-09-01`,
   time: "08:30",
+  weeklySlots: [{ day: "mon", time: "08:30" }],
   holidays: [],
   practiceRanges: [],
 };
 
+function getPairLabel(time: string) {
+  return LESSON_SLOTS.find((slot) => slot.start === time)?.pair ?? null;
+}
+
+function sortWeeklySlots(slots: WeeklyLessonSlot[]) {
+  const order = new Map(dayOptions.map((day, index) => [day.key, index]));
+  return [...slots].sort((a, b) => (order.get(a.day) ?? 99) - (order.get(b.day) ?? 99) || a.time.localeCompare(b.time));
+}
+
+function getPlanSlots(plan: SchedulePlanInput) {
+  if (plan.weeklySlots) return sortWeeklySlots(plan.weeklySlots);
+  return normalizeWeeklySlots(plan);
+}
+
 function normalizeDraft(plan: SchedulePlanInput): SchedulePlanInput {
+  const weeklySlots = sortWeeklySlots(
+    Array.from(
+      new Map((plan.weeklySlots ?? []).filter((slot) => slot.day && slot.time).map((slot) => [`${slot.day}-${slot.time}`, slot])).values()
+    )
+  );
+
   return {
     ...plan,
     subject: plan.subject.trim(),
     teacher: plan.teacher.trim(),
     group: plan.group.trim(),
     room: plan.room.trim(),
+    time: weeklySlots[0]?.time ?? plan.time,
+    weeklySlots,
     holidays: Array.from(new Set(plan.holidays)).sort(),
     practiceRanges: plan.practiceRanges.filter((range) => range.start && range.end),
   };
@@ -60,6 +92,7 @@ export function YearScheduleForm({
   const [groupsOpen, setGroupsOpen] = useState(false);
 
   const lessonCount = useMemo(() => Math.ceil((Number(draft.maxHours) || 0) / LESSON_HOURS), [draft.maxHours]);
+  const weeklySlots = useMemo(() => getPlanSlots(draft), [draft]);
   const preview = useMemo(() => {
     if (!draft.subject || !draft.teacher || !draft.group || !draft.startDate || !draft.maxHours) return null;
     try {
@@ -69,6 +102,22 @@ export function YearScheduleForm({
       return null;
     }
   }, [draft]);
+
+  const toggleWeeklySlot = (day: DayKey, time: string) => {
+    setDraft((current) => {
+      const currentSlots = current.weeklySlots ?? [];
+      const exists = currentSlots.some((slot) => slot.day === day && slot.time === time);
+      const nextSlots = exists
+        ? currentSlots.filter((slot) => !(slot.day === day && slot.time === time))
+        : [...currentSlots, { day, time }];
+
+      return {
+        ...current,
+        time: nextSlots[0]?.time ?? current.time,
+        weeklySlots: sortWeeklySlots(nextSlots),
+      };
+    });
+  };
 
   const addHoliday = (date: string) => {
     if (!date) return;
@@ -95,12 +144,16 @@ export function YearScheduleForm({
 
   const validate = () => {
     const clean = normalizeDraft(draft);
-    if (!clean.subject || !clean.teacher || !clean.group || !clean.room || !clean.startDate || !clean.time) {
-      alert("Заполните предмет, преподавателя, группу, кабинет, дату начала и время пары.");
+    if (!clean.subject || !clean.teacher || !clean.group || !clean.room || !clean.startDate) {
+      alert("Заполните предмет, преподавателя, группу, кабинет и дату начала.");
       return null;
     }
     if (clean.maxHours <= 0) {
       alert("Максимум часов должен быть больше нуля.");
+      return null;
+    }
+    if ((clean.weeklySlots ?? []).length === 0) {
+      alert("Выберите хотя бы одну пару в недельном шаблоне.");
       return null;
     }
     if (clean.holidays.length === 0) {
@@ -142,6 +195,7 @@ export function YearScheduleForm({
       room: plan.room,
       startDate: plan.startDate,
       time: plan.time,
+      weeklySlots: getPlanSlots(plan),
       holidays: plan.holidays,
       practiceRanges: plan.practiceRanges,
     });
@@ -179,6 +233,7 @@ export function YearScheduleForm({
             <div className={s.calculator}>
               <Calculator data-icon="inline-start" />
               <span>{lessonCount || 0} пар по 1.5 часа</span>
+              <span>{weeklySlots.length || 0} пар в неделю</span>
               {preview?.date && <strong>до {preview.date}</strong>}
             </div>
             <label className={s.field}>
@@ -220,17 +275,56 @@ export function YearScheduleForm({
               <span>Дата начала пары</span>
               <input type="date" value={draft.startDate} onChange={(event) => setDraft({ ...draft, startDate: event.target.value })} required />
             </label>
-            <label className={s.field}>
-              <span>Пара</span>
-              <select value={draft.time} onChange={(event) => setDraft({ ...draft, time: event.target.value })} required>
-                {LESSON_SLOTS.map((slot) => (
-                  <option key={slot.pair} value={slot.start}>
-                    {slot.pair} пара · {getTimeLabel(slot.start)}
-                  </option>
-                ))}
-              </select>
-            </label>
           </div>
+
+          <section className={s.dateBlock}>
+            <div className={s.blockHead}>
+              <div>
+                <h3>Шаблон недели</h3>
+                <p>Выберите конкретные пары по дням. Можно поставить несколько пар одного предмета в один день.</p>
+              </div>
+              <div className={s.patternStat}>{weeklySlots.length} пар в неделю</div>
+            </div>
+            <div className={s.patternGrid}>
+              {dayOptions.map((day) => (
+                <div key={day.key} className={s.patternDay}>
+                  <div className={s.patternDayName}>{day.label}</div>
+                  <div className={s.slotGrid}>
+                    {LESSON_SLOTS.map((slot) => {
+                      const active = weeklySlots.some((item) => item.day === day.key && item.time === slot.start);
+                      return (
+                        <button
+                          type="button"
+                          key={`${day.key}-${slot.start}`}
+                          className={`${s.slotBtn} ${active ? s.slotBtnActive : ""}`}
+                          onClick={() => toggleWeeklySlot(day.key, slot.start)}
+                          title={`${slot.pair} пара · ${getTimeLabel(slot.start)}`}
+                        >
+                          <span>{slot.pair}</span>
+                          <small>{getTimeLabel(slot.start)}</small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={s.patternSummary}>
+              {weeklySlots.length === 0 ? (
+                <span className={s.muted}>Пока не выбрано ни одной пары</span>
+              ) : (
+                weeklySlots.map((slot) => {
+                  const day = dayOptions.find((item) => item.key === slot.day)?.label ?? slot.day;
+                  const pair = getPairLabel(slot.time);
+                  return (
+                    <span key={`${slot.day}-${slot.time}`} className={s.patternChip}>
+                      {day}, {pair ? `${pair} пара` : slot.time}
+                    </span>
+                  );
+                })
+              )}
+            </div>
+          </section>
 
           <section className={s.dateBlock}>
             <div className={s.blockHead}>
@@ -316,30 +410,33 @@ export function YearScheduleForm({
         <section className={s.planList}>
           <h3>Созданные предметы</h3>
           {plans.length === 0 && <p className={s.muted}>Пока нет созданных расписаний.</p>}
-          {plans.map((plan) => (
-            <article key={plan.id} className={s.planCard}>
-              <div>
-                <strong>{plan.subject}</strong>
-                <span>{plan.teacher} · {plan.group} · {plan.lessonIds.length} пар</span>
-              </div>
-              <div className={s.planActions}>
-                <button type="button" className={s.smallBtn} onClick={() => editPlan(plan)}>
-                  <Pencil data-icon="inline-start" />
-                  Изменить
-                </button>
-                <button
-                  type="button"
-                  className={`${s.smallBtn} ${s.dangerBtn}`}
-                  onClick={() => {
-                    if (confirm("Удалить предмет и все созданные для него занятия?")) onDelete(plan.id);
-                  }}
-                >
-                  <Trash2 data-icon="inline-start" />
-                  Удалить
-                </button>
-              </div>
-            </article>
-          ))}
+          {plans.map((plan) => {
+            const slots = getPlanSlots(plan);
+            return (
+              <article key={plan.id} className={s.planCard}>
+                <div>
+                  <strong>{plan.subject}</strong>
+                  <span>{plan.teacher} · {plan.group} · {plan.lessonIds.length} пар · {slots.length} пар в неделю</span>
+                </div>
+                <div className={s.planActions}>
+                  <button type="button" className={s.smallBtn} onClick={() => editPlan(plan)}>
+                    <Pencil data-icon="inline-start" />
+                    Изменить
+                  </button>
+                  <button
+                    type="button"
+                    className={`${s.smallBtn} ${s.dangerBtn}`}
+                    onClick={() => {
+                      if (confirm("Удалить предмет и все созданные для него занятия?")) onDelete(plan.id);
+                    }}
+                  >
+                    <Trash2 data-icon="inline-start" />
+                    Удалить
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </section>
       </div>
     </div>

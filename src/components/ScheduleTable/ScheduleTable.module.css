@@ -55,6 +55,17 @@
   background: transparent;
 }
 
+.noLessonRow td {
+  padding: 0.7rem 1rem;
+  color: var(--color-muted-foreground);
+  font-style: italic;
+  background: color-mix(in srgb, var(--color-card) 86%, var(--color-secondary));
+}
+
+.noLessonRow:hover td {
+  background: color-mix(in srgb, var(--color-card) 86%, var(--color-secondary));
+}
+
 .teacherCell {
   display: inline-flex;
   align-items: center;

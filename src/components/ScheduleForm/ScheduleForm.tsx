@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Users } from "lucide-react";
 import { useI18n, DAY_KEYS } from "@/lib/i18n";
+import { getDurationMinutes, getLessonEndTime } from "@/lib/lesson-slots";
 import type { DayKey, Lesson } from "@/lib/schedule-store";
 import s from "./ScheduleForm.module.css";
 
@@ -11,6 +12,7 @@ const emptyDraft: Draft = {
   subject: "",
   day: "mon",
   time: "09:00",
+  endTime: "10:30",
   room: "",
   group: "",
   date: "",
@@ -35,6 +37,12 @@ export function ScheduleForm({
   const handle = (event: FormEvent) => {
     event.preventDefault();
     if (!draft.teacher.trim() || !draft.subject.trim() || !draft.group.trim() || !draft.room.trim()) return;
+    const endTime = draft.endTime || getLessonEndTime(draft.time);
+    const durationMinutes = getDurationMinutes(draft.time, endTime);
+    if (!durationMinutes) {
+      alert("Конец пары должен быть позже начала пары.");
+      return;
+    }
     onSubmit({
       ...draft,
       teacher: draft.teacher.trim(),
@@ -42,6 +50,8 @@ export function ScheduleForm({
       room: draft.room.trim(),
       group: draft.group.trim(),
       date: draft.date || undefined,
+      endTime,
+      durationMinutes,
     });
   };
 
@@ -72,8 +82,25 @@ export function ScheduleForm({
             <input type="date" className={s.input} value={draft.date ?? ""} onChange={(event) => setDraft({ ...draft, date: event.target.value })} />
           </div>
           <div className={s.field}>
-            <label className={s.label}>{t("form.time")}</label>
-            <input type="time" className={s.input} value={draft.time} onChange={(event) => setDraft({ ...draft, time: event.target.value })} />
+            <label className={s.label}>Начало пары</label>
+            <input
+              type="time"
+              className={s.input}
+              value={draft.time}
+              onChange={(event) => {
+                const time = event.target.value;
+                setDraft({ ...draft, time, endTime: getLessonEndTime(time) });
+              }}
+            />
+          </div>
+          <div className={s.field}>
+            <label className={s.label}>Конец пары</label>
+            <input
+              type="time"
+              className={s.input}
+              value={draft.endTime ?? getLessonEndTime(draft.time)}
+              onChange={(event) => setDraft({ ...draft, endTime: event.target.value })}
+            />
           </div>
           <div className={s.field}>
             <label className={s.label}>{t("form.room")}</label>

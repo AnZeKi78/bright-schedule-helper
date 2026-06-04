@@ -215,6 +215,102 @@
   font-size: 0.84rem;
 }
 
+.patternStat {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.patternGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.patternDay {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.patternDayName {
+  color: var(--color-foreground);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.slotBtn {
+  min-height: 54px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: inherit;
+  font-weight: 700;
+}
+
+.slotBtn small {
+  color: var(--color-muted-foreground);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.slotBtn:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+}
+
+.slotBtnActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.slotBtnActive small {
+  color: color-mix(in srgb, var(--color-primary-foreground) 82%, transparent);
+}
+
+.patternSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+
+.patternChip {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-card));
+  color: var(--color-foreground);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
 .inlineAdd {
   display: flex;
   flex-wrap: wrap;
@@ -272,9 +368,18 @@
   }
 
   .blockHead,
-  .planCard {
+  .planCard,
+  .patternDay {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .patternDay {
+    display: flex;
+  }
+
+  .slotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .actions,

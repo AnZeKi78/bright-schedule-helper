@@ -9,6 +9,7 @@ export type Lesson = {
   subject: string;
   day: DayKey;
   time: string;
+  endTime?: string;
   room: string;
   group: string;
   date?: string;

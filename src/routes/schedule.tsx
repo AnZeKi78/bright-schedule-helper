@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { findScheduleConflicts, uniqueConflictLessonIds, type ScheduleConflict } from "@/lib/schedule-conflicts";
-import { LESSON_SLOTS } from "@/lib/lesson-slots";
+import { getLessonEndTime, LESSON_SLOTS } from "@/lib/lesson-slots";
 import { schedule, type SchedulePlanInput } from "@/lib/schedule-generator";
 import { jsDayToKey, useSchedule, type Lesson } from "@/lib/schedule-store";
 import { Filters, emptyFilters, type FilterState } from "@/components/Filters/Filters";
@@ -75,7 +75,7 @@ function SchedulePage() {
 
   const findRelocationSlot = (lesson: Lesson, occupied: Lesson[]) => {
     for (const slot of LESSON_SLOTS) {
-      const candidate = { ...lesson, time: slot.start, durationMinutes: 90 };
+      const candidate = { ...lesson, time: slot.start, endTime: slot.end, durationMinutes: 90 };
       const conflicts = findScheduleConflicts({ candidates: [candidate], lessons: occupied });
       if (conflicts.length === 0) return candidate;
     }
@@ -101,12 +101,16 @@ function SchedulePage() {
   };
 
   const normalizeManualLesson = (lesson: Omit<Lesson, "id">) => {
-    if (!lesson.date) return lesson;
+    const normalized = {
+      ...lesson,
+      endTime: lesson.endTime ?? getLessonEndTime(lesson.time, lesson.durationMinutes ?? 90),
+      durationMinutes: lesson.durationMinutes ?? 90,
+    };
+    if (!lesson.date) return normalized;
     const [year, month, day] = lesson.date.split("-").map(Number);
     return {
-      ...lesson,
+      ...normalized,
       day: jsDayToKey(new Date(year, month - 1, day).getDay()),
-      durationMinutes: lesson.durationMinutes ?? 90,
     };
   };
 

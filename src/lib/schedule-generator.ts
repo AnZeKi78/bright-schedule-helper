@@ -1,8 +1,14 @@
 import type { DayKey, Lesson } from "./schedule-store";
+import { getLessonEndTime } from "./lesson-slots";
 
 export type DateRange = {
   start: string;
   end: string;
+};
+
+export type WeeklyLessonSlot = {
+  day: DayKey;
+  time: string;
 };
 
 export type SchedulePlanInput = {
@@ -13,12 +19,14 @@ export type SchedulePlanInput = {
   room: string;
   startDate: string;
   time: string;
+  weeklySlots?: WeeklyLessonSlot[];
   holidays: string[];
   practiceRanges: DateRange[];
 };
 
 const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as DayKey[];
 const WORK_DAYS = new Set<DayKey>(["mon", "tue", "wed", "thu", "fri"]);
+const WORK_DAY_ORDER: Record<DayKey, number> = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 };
 const LESSON_DURATION_MINUTES = 90;
 export const LESSON_HOURS = LESSON_DURATION_MINUTES / 60;
 
@@ -63,6 +71,22 @@ export function practic(ranges: DateRange[]) {
   return dates;
 }
 
+export function normalizeWeeklySlots(input: Pick<SchedulePlanInput, "time" | "weeklySlots">) {
+  const slots = input.weeklySlots !== undefined
+    ? input.weeklySlots
+    : (["mon", "tue", "wed", "thu", "fri"] as DayKey[]).map((day) => ({ day, time: input.time }));
+
+  const unique = new Map<string, WeeklyLessonSlot>();
+  for (const slot of slots) {
+    if (!WORK_DAYS.has(slot.day) || !slot.time) continue;
+    unique.set(`${slot.day}-${slot.time}`, { day: slot.day, time: slot.time });
+  }
+
+  return Array.from(unique.values()).sort(
+    (a, b) => WORK_DAY_ORDER[a.day] - WORK_DAY_ORDER[b.day] || a.time.localeCompare(b.time)
+  );
+}
+
 export function schedule(input: SchedulePlanInput): Omit<Lesson, "id">[] {
   const start = parseIsoDate(input.startDate);
   if (!start) throw new Error("Start date is required");
@@ -70,6 +94,9 @@ export function schedule(input: SchedulePlanInput): Omit<Lesson, "id">[] {
 
   const holidays = weekend(input.holidays);
   const practiceDates = practic(input.practiceRanges);
+  const weeklySlots = normalizeWeeklySlots(input);
+  if (weeklySlots.length === 0) throw new Error("Weekly slots are required");
+
   const lessonsCount = Math.ceil(input.maxHours / LESSON_HOURS);
   const lessons: Omit<Lesson, "id">[] = [];
 
@@ -80,16 +107,21 @@ export function schedule(input: SchedulePlanInput): Omit<Lesson, "id">[] {
     const day = DAY_KEYS[cursor.getDay()];
 
     if (WORK_DAYS.has(day) && !holidays.has(date) && !practiceDates.has(date)) {
-      lessons.push({
-        teacher: input.teacher.trim(),
-        subject: input.subject.trim(),
-        day,
-        time: input.time,
-        room: input.room.trim(),
-        group: input.group.trim(),
-        date,
-        durationMinutes: LESSON_DURATION_MINUTES,
-      });
+      for (const slot of weeklySlots.filter((item) => item.day === day)) {
+        lessons.push({
+          teacher: input.teacher.trim(),
+          subject: input.subject.trim(),
+          day,
+          time: slot.time,
+          endTime: getLessonEndTime(slot.time, LESSON_DURATION_MINUTES),
+          room: input.room.trim(),
+          group: input.group.trim(),
+          date,
+          durationMinutes: LESSON_DURATION_MINUTES,
+        });
+
+        if (lessons.length >= lessonsCount) break;
+      }
     }
 
     cursor = addDays(cursor, 1);

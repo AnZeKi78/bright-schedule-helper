@@ -1,4 +1,5 @@
 import type { Lesson } from "./schedule-store";
+import { getDurationMinutes } from "./lesson-slots";
 
 export type ConflictReason = "teacher" | "group" | "room";
 
@@ -17,8 +18,8 @@ function timeToMinutes(value: string) {
 function rangesOverlap(a: Omit<Lesson, "id">, b: Lesson) {
   const aStart = timeToMinutes(a.time);
   const bStart = timeToMinutes(b.time);
-  const aEnd = aStart + (a.durationMinutes ?? 90);
-  const bEnd = bStart + (b.durationMinutes ?? 90);
+  const aEnd = aStart + (a.endTime ? getDurationMinutes(a.time, a.endTime) ?? 90 : a.durationMinutes ?? 90);
+  const bEnd = bStart + (b.endTime ? getDurationMinutes(b.time, b.endTime) ?? 90 : b.durationMinutes ?? 90);
   return aStart < bEnd && bStart < aEnd;
 }
 
