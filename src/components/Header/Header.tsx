@@ -24,8 +24,10 @@ export function Header() {
   const { location } = useRouterState();
 
   const today = useMemo(() => {
-    const dayKey = jsDayToKey(new Date().getDay());
-    let visible = lessons.filter((l) => l.day === dayKey);
+    const now = new Date();
+    const isoToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const dayKey = jsDayToKey(now.getDay());
+    let visible = lessons.filter((lesson) => (lesson.date ? lesson.date === isoToday : lesson.day === dayKey));
     if (user?.role === "teacher" && user.subjects.length > 0) {
       visible = visible.filter((l) => user.subjects.includes(l.subject));
     }

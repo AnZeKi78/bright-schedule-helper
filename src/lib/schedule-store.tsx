@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { schedule, type SchedulePlanInput } from "./schedule-generator";
 
 export type DayKey = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
 
@@ -7,72 +8,206 @@ export type Lesson = {
   teacher: string;
   subject: string;
   day: DayKey;
-  time: string; // "HH:MM"
+  time: string;
   room: string;
   group: string;
+  date?: string;
+  durationMinutes?: number;
+  sourcePlanId?: string;
+};
+
+export type SchedulePlan = SchedulePlanInput & {
+  id: string;
+  lessonIds: string[];
+  createdAt: string;
+  updatedAt?: string;
 };
 
 const STORAGE_KEY = "schedule.lessons";
-
-const SEED: Lesson[] = [
-  { id: "s1", teacher: "Мустафина А.К.", subject: "Программирование", day: "mon", time: "09:00", room: "301", group: "ИС-21" },
-  { id: "s2", teacher: "Мустафина А.К.", subject: "Программирование", day: "wed", time: "10:30", room: "301", group: "ИС-22" },
-  { id: "s3", teacher: "Иванов С.П.", subject: "Математика", day: "mon", time: "11:00", room: "204", group: "ИС-21" },
-  { id: "s4", teacher: "Иванов С.П.", subject: "Математика", day: "tue", time: "09:00", room: "204", group: "ИС-22" },
-  { id: "s5", teacher: "Ахметова Д.Р.", subject: "Английский язык", day: "thu", time: "14:00", room: "112", group: "ИС-21" },
-  { id: "s6", teacher: "Ахметова Д.Р.", subject: "Английский язык", day: "fri", time: "12:30", room: "112", group: "ИС-22" },
-];
+const PLANS_KEY = "schedule.plans";
+const GROUPS_KEY = "schedule.groups";
+const VERSION_KEY = "schedule.version";
+const DATA_VERSION = "2";
+const DEFAULT_GROUPS = ["ИС-21", "ИС-22", "ПО-21", "ВТ-21"];
 
 type Ctx = {
   lessons: Lesson[];
-  add: (l: Omit<Lesson, "id">) => void;
-  update: (l: Lesson) => void;
+  plans: SchedulePlan[];
+  groups: string[];
+  add: (lesson: Omit<Lesson, "id">) => void;
+  update: (lesson: Lesson) => void;
   remove: (id: string) => void;
-  bulkAdd: (items: Omit<Lesson, "id">[]) => void;
+  addGroup: (name: string) => void;
+  createPlan: (input: SchedulePlanInput) => void;
+  updatePlan: (id: string, input: SchedulePlanInput) => void;
+  removePlan: (id: string) => void;
   clear: () => void;
 };
 
 const ScheduleContext = createContext<Ctx | null>(null);
 
 export function ScheduleProvider({ children }: { children: ReactNode }) {
-  const [lessons, setLessons] = useState<Lesson[]>(SEED);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [plans, setPlans] = useState<SchedulePlan[]>([]);
+  const [groups, setGroups] = useState<string[]>(DEFAULT_GROUPS);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
+
+    const version = localStorage.getItem(VERSION_KEY);
+    if (version !== DATA_VERSION) {
+      localStorage.setItem(VERSION_KEY, DATA_VERSION);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+      localStorage.setItem(PLANS_KEY, JSON.stringify([]));
+      localStorage.setItem(GROUPS_KEY, JSON.stringify(DEFAULT_GROUPS));
+      setLessons([]);
+      setPlans([]);
+      setGroups(DEFAULT_GROUPS);
+      setHydrated(true);
+      return;
+    }
+
+    const rawLessons = localStorage.getItem(STORAGE_KEY);
+    if (rawLessons) {
       try {
-        setLessons(JSON.parse(raw));
+        setLessons(JSON.parse(rawLessons));
       } catch {
-        /* ignore */
+        /* ignore broken storage */
       }
     }
+
+    const rawPlans = localStorage.getItem(PLANS_KEY);
+    if (rawPlans) {
+      try {
+        setPlans(JSON.parse(rawPlans));
+      } catch {
+        /* ignore broken storage */
+      }
+    }
+
+    const rawGroups = localStorage.getItem(GROUPS_KEY);
+    if (rawGroups) {
+      try {
+        const saved = JSON.parse(rawGroups) as string[];
+        setGroups(Array.from(new Set([...DEFAULT_GROUPS, ...saved])).sort());
+      } catch {
+        /* ignore broken storage */
+      }
+    }
+
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || !hydrated) return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
-  }, [lessons]);
+  }, [hydrated, lessons]);
 
-  const add = useCallback((l: Omit<Lesson, "id">) => {
-    setLessons((p) => [...p, { ...l, id: crypto.randomUUID() }]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !hydrated) return;
+    localStorage.setItem(PLANS_KEY, JSON.stringify(plans));
+  }, [hydrated, plans]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !hydrated) return;
+    localStorage.setItem(GROUPS_KEY, JSON.stringify(groups));
+  }, [groups, hydrated]);
+
+  const addGroup = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setGroups((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed].sort()));
   }, []);
 
-  const update = useCallback((l: Lesson) => {
-    setLessons((p) => p.map((x) => (x.id === l.id ? l : x)));
-  }, []);
+  const add = useCallback((lesson: Omit<Lesson, "id">) => {
+    addGroup(lesson.group);
+    setLessons((prev) => [...prev, { ...lesson, id: crypto.randomUUID() }]);
+  }, [addGroup]);
+
+  const update = useCallback((lesson: Lesson) => {
+    addGroup(lesson.group);
+    setLessons((prev) => prev.map((item) => (item.id === lesson.id ? lesson : item)));
+  }, [addGroup]);
 
   const remove = useCallback((id: string) => {
-    setLessons((p) => p.filter((x) => x.id !== id));
+    setLessons((prev) => prev.filter((lesson) => lesson.id !== id));
+    setPlans((prev) => prev.map((plan) => ({ ...plan, lessonIds: plan.lessonIds.filter((lessonId) => lessonId !== id) })));
   }, []);
 
-  const bulkAdd = useCallback((items: Omit<Lesson, "id">[]) => {
-    setLessons((p) => [...p, ...items.map((x) => ({ ...x, id: crypto.randomUUID() }))]);
+  const createPlan = useCallback((input: SchedulePlanInput) => {
+    const planId = crypto.randomUUID();
+    const generated = schedule(input);
+    const lessonIds = generated.map(() => crypto.randomUUID());
+
+    addGroup(input.group);
+    setLessons((prev) => [
+      ...prev,
+      ...generated.map((lesson, index) => ({
+        ...lesson,
+        id: lessonIds[index],
+        sourcePlanId: planId,
+      })),
+    ]);
+    setPlans((prev) => [
+      ...prev,
+      {
+        ...input,
+        id: planId,
+        lessonIds,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }, [addGroup]);
+
+  const updatePlan = useCallback((id: string, input: SchedulePlanInput) => {
+    const generated = schedule(input);
+    const lessonIds = generated.map(() => crypto.randomUUID());
+
+    addGroup(input.group);
+    setLessons((prev) => [
+      ...prev.filter((lesson) => lesson.sourcePlanId !== id),
+      ...generated.map((lesson, index) => ({
+        ...lesson,
+        id: lessonIds[index],
+        sourcePlanId: id,
+      })),
+    ]);
+    setPlans((prev) =>
+      prev.map((plan) =>
+        plan.id === id
+          ? { ...input, id, lessonIds, createdAt: plan.createdAt, updatedAt: new Date().toISOString() }
+          : plan
+      )
+    );
+  }, [addGroup]);
+
+  const removePlan = useCallback((id: string) => {
+    setLessons((prev) => prev.filter((lesson) => lesson.sourcePlanId !== id));
+    setPlans((prev) => prev.filter((plan) => plan.id !== id));
   }, []);
 
-  const clear = useCallback(() => setLessons([]), []);
+  const clear = useCallback(() => {
+    setLessons([]);
+    setPlans([]);
+  }, []);
 
-  const value = useMemo(() => ({ lessons, add, update, remove, bulkAdd, clear }), [lessons, add, update, remove, bulkAdd, clear]);
+  const value = useMemo(
+    () => ({
+      lessons,
+      plans,
+      groups,
+      add,
+      update,
+      remove,
+      addGroup,
+      createPlan,
+      updatePlan,
+      removePlan,
+      clear,
+    }),
+    [lessons, plans, groups, add, update, remove, addGroup, createPlan, updatePlan, removePlan, clear]
+  );
 
   return <ScheduleContext.Provider value={value}>{children}</ScheduleContext.Provider>;
 }
@@ -83,7 +218,6 @@ export function useSchedule() {
   return ctx;
 }
 
-/** JS getDay() → наш DayKey */
-export function jsDayToKey(d: number): DayKey {
-  return (["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as DayKey[])[d];
+export function jsDayToKey(day: number): DayKey {
+  return (["sun", "mon", "tue", "wed", "thu", "fri", "sat"] as DayKey[])[day];
 }

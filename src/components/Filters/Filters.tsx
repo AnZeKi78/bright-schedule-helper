@@ -3,30 +3,42 @@ import type { DayKey } from "@/lib/schedule-store";
 import s from "./Filters.module.css";
 
 export type FilterState = {
+  group: string;
   teacher: string;
   subject: string;
   day: DayKey | "";
   query: string;
 };
 
-export const emptyFilters: FilterState = { teacher: "", subject: "", day: "", query: "" };
+export const emptyFilters: FilterState = { group: "", teacher: "", subject: "", day: "", query: "" };
 
 export function Filters({
   state,
   onChange,
   teachers,
   subjects,
+  groups,
 }: {
   state: FilterState;
   onChange: (s: FilterState) => void;
   teachers: string[];
   subjects: string[];
+  groups: string[];
 }) {
   const { t } = useI18n();
   const set = (patch: Partial<FilterState>) => onChange({ ...state, ...patch });
 
   return (
     <div className={s.wrap}>
+      <div className={s.field}>
+        <label className={s.label}>Группа</label>
+        <select className={s.select} value={state.group} onChange={(e) => set({ group: e.target.value })}>
+          <option value="" disabled hidden>Выберите группу</option>
+          {groups.map((x) => (
+            <option key={x} value={x}>{x}</option>
+          ))}
+        </select>
+      </div>
       <div className={s.field}>
         <label className={s.label}>{t("filters.teacher")}</label>
         <select className={s.select} value={state.teacher} onChange={(e) => set({ teacher: e.target.value })}>

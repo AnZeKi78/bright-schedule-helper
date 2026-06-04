@@ -10,10 +10,12 @@
 
 .modal {
   width: 100%;
-  max-width: 520px;
+  max-width: 620px;
+  max-height: min(92vh, 760px);
+  overflow: auto;
   background: var(--color-card);
   color: var(--color-card-foreground);
-  border-radius: 14px;
+  border-radius: 8px;
   border: 1px solid var(--color-border);
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.4);
   padding: 1.5rem;
@@ -69,4 +71,62 @@
   background: var(--color-primary);
   color: var(--color-primary-foreground);
   border-color: var(--color-primary);
+}
+
+.groupRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.iconBtn {
+  min-height: 38px;
+  padding: 0 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.groupPanel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-secondary) 55%, transparent);
+}
+
+.groupOption {
+  min-height: 32px;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.groupOptionActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+@media (max-width: 620px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .groupRow {
+    grid-template-columns: 1fr;
+  }
 }

@@ -1,0 +1,129 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in srgb, black 58%, transparent);
+}
+
+.modal {
+  width: min(760px, 100%);
+  max-height: min(88vh, 720px);
+  overflow: auto;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-destructive) 35%, var(--color-border));
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  box-shadow: 0 30px 70px -25px rgba(0, 0, 0, 0.5);
+  padding: 1.25rem;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.header p {
+  margin: 0.45rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.92rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.item {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-secondary) 45%, transparent);
+  padding: 0.85rem;
+}
+
+.itemHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.7rem;
+}
+
+.itemHead span {
+  color: var(--color-destructive);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.compare div {
+  border-left: 3px solid var(--color-border);
+  padding-left: 0.7rem;
+}
+
+.compare b {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.84rem;
+}
+
+.compare p {
+  margin: 0.18rem 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.88rem;
+}
+
+.more {
+  color: var(--color-muted-foreground);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.1rem;
+}
+
+.secondaryBtn,
+.dangerBtn {
+  min-height: 40px;
+  padding: 0 1rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryBtn {
+  border: 1px solid var(--color-border);
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+}
+
+.dangerBtn {
+  border: 1px solid var(--color-destructive);
+  background: var(--color-destructive);
+  color: var(--color-destructive-foreground);
+}
+
+@media (max-width: 640px) {
+  .compare {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+}

@@ -22,8 +22,10 @@ function Index() {
   const { lessons } = useSchedule();
 
   const today = useMemo(() => {
+    const now = new Date();
+    const isoToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const dk = jsDayToKey(new Date().getDay());
-    let v = lessons.filter((l) => l.day === dk);
+    let v = lessons.filter((l) => (l.date ? l.date === isoToday : l.day === dk));
     if (user?.role === "teacher" && user.subjects.length > 0) {
       v = v.filter((l) => user.subjects.includes(l.subject));
     }
