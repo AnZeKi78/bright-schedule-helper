@@ -63,6 +63,26 @@ function createDayLabel(day: DayKey, t: (key: string) => string, date?: Date) {
   return date ? `${t(dayKeyToTKey[day])} · ${formatDate(date)}` : t(dayKeyToTKey[day]);
 }
 
+function getDateBounds(rows: Lesson[]) {
+  const times = rows
+    .map((lesson) => parseIsoDate(lesson.date)?.getTime())
+    .filter((time): time is number => typeof time === "number");
+
+  if (times.length === 0) return { firstDate: null, lastDate: null };
+
+  return {
+    firstDate: new Date(Math.min(...times)),
+    lastDate: new Date(Math.max(...times)),
+  };
+}
+
+function isOutsideBounds(date: Date, firstDate: Date | null, lastDate: Date | null) {
+  const time = date.getTime();
+  return Boolean(
+    (firstDate && time < firstDate.getTime()) || (lastDate && time > lastDate.getTime()),
+  );
+}
+
 function formatDuration(minutes?: number) {
   if (!minutes) return "-";
   const hours = Math.floor(minutes / 60);
@@ -72,9 +92,17 @@ function formatDuration(minutes?: number) {
   return `${hours} ч ${rest} мин`;
 }
 
-function ensureWeekDays(week: TableWeek, start: Date | null, t: (key: string) => string) {
+function ensureWeekDays(
+  week: TableWeek,
+  start: Date | null,
+  t: (key: string) => string,
+  firstDate: Date | null,
+  lastDate: Date | null,
+) {
   allDays.forEach((day, index) => {
     const date = start ? addDays(start, index) : null;
+    if (date && isOutsideBounds(date, firstDate, lastDate)) return;
+
     const key = date ? dateKey(date) : day;
 
     if (!week.days.has(key)) {
@@ -91,22 +119,32 @@ function buildGroups(rows: Lesson[], t: (key: string) => string) {
   const sorted = [...rows].sort((a, b) => {
     const aDate = a.date ?? "";
     const bDate = b.date ?? "";
-    return aDate.localeCompare(bDate) || dayOrder[a.day] - dayOrder[b.day] || a.time.localeCompare(b.time);
+    return (
+      aDate.localeCompare(bDate) ||
+      dayOrder[a.day] - dayOrder[b.day] ||
+      a.time.localeCompare(b.time)
+    );
   });
 
+  const { firstDate, lastDate } = getDateBounds(sorted);
   const weeks = new Map<string, TableWeek>();
 
   for (const lesson of sorted) {
     const parsed = parseIsoDate(lesson.date);
     const start = parsed ? weekStart(parsed) : null;
+    const end = start ? addDays(start, 6) : null;
+    const labelStart =
+      start && firstDate && firstDate.getTime() > start.getTime() ? firstDate : start;
+    const labelEnd = end && lastDate && lastDate.getTime() < end.getTime() ? lastDate : end;
     const weekKey = start ? dateKey(start) : "without-date";
-    const weekLabel = start
-      ? `${t("table.week")} ${formatDate(start)} - ${formatDate(addDays(start, 6))}`
-      : t("table.noDate");
+    const weekLabel =
+      labelStart && labelEnd
+        ? `${t("table.week")} ${formatDate(labelStart)} - ${formatDate(labelEnd)}`
+        : t("table.noDate");
 
     if (!weeks.has(weekKey)) {
       const week = { key: weekKey, label: weekLabel, days: new Map<string, TableDay>() };
-      ensureWeekDays(week, start, t);
+      ensureWeekDays(week, start, t, firstDate, lastDate);
       weeks.set(weekKey, week);
     }
 
@@ -208,19 +246,26 @@ export function ScheduleTable({
                             </span>
                           </td>
                           <td>
-                            <span className={s.subjectBlock} style={{ borderColor: c.border, background: c.bg, color: c.text }}>
+                            <span
+                              className={s.subjectBlock}
+                              style={{ borderColor: c.border, background: c.bg, color: c.text }}
+                            >
                               {l.subject}
                             </span>
                           </td>
                           <td>{l.date ?? "-"}</td>
-                          <td className={s.timeCell}>{getTimeLabel(l.time, l.endTime, l.durationMinutes)}</td>
+                          <td className={s.timeCell}>
+                            {getTimeLabel(l.time, l.endTime, l.durationMinutes)}
+                          </td>
                           <td>{formatDuration(l.durationMinutes)}</td>
                           <td>{l.room}</td>
                           <td>{l.group}</td>
                           {canModify && (
                             <td>
                               <div className={s.actions}>
-                                <button className={s.btn} onClick={() => onEdit?.(l)}>{t("schedule.edit")}</button>
+                                <button className={s.btn} onClick={() => onEdit?.(l)}>
+                                  {t("schedule.edit")}
+                                </button>
                                 <button
                                   className={`${s.btn} ${s.btnDanger}`}
                                   onClick={() => {

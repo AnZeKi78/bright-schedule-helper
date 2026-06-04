@@ -56,7 +56,9 @@
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 .navLink:hover {
   background: var(--color-secondary);
@@ -93,6 +95,10 @@
 .todayCount {
   font-weight: 700;
 }
+.todayTime {
+  font-weight: 700;
+  white-space: nowrap;
+}
 .todayMuted {
   color: var(--color-muted-foreground);
 }
@@ -128,7 +134,9 @@
   display: inline-flex;
   align-items: center;
 }
-.primaryBtn:hover { opacity: 0.92; }
+.primaryBtn:hover {
+  opacity: 0.92;
+}
 
 .userChip {
   display: flex;
@@ -152,7 +160,22 @@
 }
 
 @media (max-width: 720px) {
-  .inner { grid-template-columns: auto auto; gap: 0.75rem; }
-  .nav { grid-column: 1 / -1; order: 3; overflow-x: auto; }
-  .todayBadge { display: none; }
+  .inner {
+    grid-template-columns: auto auto;
+    gap: 0.75rem;
+  }
+  .nav {
+    grid-column: 1 / -1;
+    order: 3;
+    overflow-x: auto;
+  }
+  .todayBadge {
+    display: none;
+  }
+}
+
+@media (max-width: 1100px) {
+  .todayTime {
+    display: none;
+  }
 }

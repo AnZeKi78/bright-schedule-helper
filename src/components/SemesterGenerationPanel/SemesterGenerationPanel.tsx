@@ -7,9 +7,10 @@ import {
   type SemesterGenerationInput,
 } from "@/lib/schedule-generator";
 import type { LessonTemplate, SemesterGenerationResult, TeacherRecord } from "@/lib/schedule-store";
+import { getSiteNow } from "@/lib/site-time";
 import s from "./SemesterGenerationPanel.module.css";
 
-const thisYear = new Date().getFullYear();
+const thisYear = getSiteNow().year;
 const emptyDraft: SemesterGenerationInput = {
   startDate: `${thisYear}-09-01`,
   endDate: `${thisYear}-12-31`,

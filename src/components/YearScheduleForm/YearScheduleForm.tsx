@@ -11,9 +11,10 @@ import {
   type WeeklyLessonSlot,
 } from "@/lib/schedule-generator";
 import type { DayKey, SchedulePlan } from "@/lib/schedule-store";
+import { getSiteNow } from "@/lib/site-time";
 import s from "./YearScheduleForm.module.css";
 
-const thisYear = new Date().getFullYear();
+const thisYear = getSiteNow().year;
 const dayOptions: Array<{ key: DayKey; label: string }> = [
   { key: "mon", label: "Понедельник" },
   { key: "tue", label: "Вторник" },
@@ -41,7 +42,9 @@ function getPairLabel(time: string) {
 
 function sortWeeklySlots(slots: WeeklyLessonSlot[]) {
   const order = new Map(dayOptions.map((day, index) => [day.key, index]));
-  return [...slots].sort((a, b) => (order.get(a.day) ?? 99) - (order.get(b.day) ?? 99) || a.time.localeCompare(b.time));
+  return [...slots].sort(
+    (a, b) => (order.get(a.day) ?? 99) - (order.get(b.day) ?? 99) || a.time.localeCompare(b.time),
+  );
 }
 
 function getPlanSlots(plan: SchedulePlanInput) {
@@ -52,8 +55,12 @@ function getPlanSlots(plan: SchedulePlanInput) {
 function normalizeDraft(plan: SchedulePlanInput): SchedulePlanInput {
   const weeklySlots = sortWeeklySlots(
     Array.from(
-      new Map((plan.weeklySlots ?? []).filter((slot) => slot.day && slot.time).map((slot) => [`${slot.day}-${slot.time}`, slot])).values()
-    )
+      new Map(
+        (plan.weeklySlots ?? [])
+          .filter((slot) => slot.day && slot.time)
+          .map((slot) => [`${slot.day}-${slot.time}`, slot]),
+      ).values(),
+    ),
   );
 
   return {
@@ -91,10 +98,14 @@ export function YearScheduleForm({
   const [practiceEnd, setPracticeEnd] = useState("");
   const [groupsOpen, setGroupsOpen] = useState(false);
 
-  const lessonCount = useMemo(() => Math.ceil((Number(draft.maxHours) || 0) / LESSON_HOURS), [draft.maxHours]);
+  const lessonCount = useMemo(
+    () => Math.ceil((Number(draft.maxHours) || 0) / LESSON_HOURS),
+    [draft.maxHours],
+  );
   const weeklySlots = useMemo(() => getPlanSlots(draft), [draft]);
   const preview = useMemo(() => {
-    if (!draft.subject || !draft.teacher || !draft.group || !draft.startDate || !draft.maxHours) return null;
+    if (!draft.subject || !draft.teacher || !draft.group || !draft.startDate || !draft.maxHours)
+      return null;
     try {
       const rows = schedule(normalizeDraft(draft));
       return rows.length > 0 ? rows[rows.length - 1] : null;
@@ -157,7 +168,9 @@ export function YearScheduleForm({
       return null;
     }
     if (clean.holidays.length === 0) {
-      alert("Обязательно выберите праздничные/выходные даты, чтобы система не поставила на них занятия.");
+      alert(
+        "Обязательно выберите праздничные/выходные даты, чтобы система не поставила на них занятия.",
+      );
       return null;
     }
     if (clean.practiceRanges.length === 0) {
@@ -167,7 +180,9 @@ export function YearScheduleForm({
     try {
       schedule(clean);
     } catch {
-      alert("Не удалось разместить все занятия в пределах одного учебного года. Уменьшите часы или проверьте исключённые даты.");
+      alert(
+        "Не удалось разместить все занятия в пределах одного учебного года. Уменьшите часы или проверьте исключённые даты.",
+      );
       return null;
     }
     return clean;
@@ -208,16 +223,25 @@ export function YearScheduleForm({
         <div className={s.header}>
           <div>
             <h2 className={s.title}>Создание расписания предмета</h2>
-            <p className={s.subtitle}>Один предмет на учебный год: рабочие дни, праздники и практика учитываются автоматически.</p>
+            <p className={s.subtitle}>
+              Один предмет на учебный год: рабочие дни, праздники и практика учитываются
+              автоматически.
+            </p>
           </div>
-          <button type="button" className={s.closeBtn} onClick={onClose}>×</button>
+          <button type="button" className={s.closeBtn} onClick={onClose}>
+            ×
+          </button>
         </div>
 
         <form className={s.form} onSubmit={handleSubmit}>
           <div className={s.grid}>
             <label className={`${s.field} ${s.full}`}>
               <span>Название предмета</span>
-              <input value={draft.subject} onChange={(event) => setDraft({ ...draft, subject: event.target.value })} required />
+              <input
+                value={draft.subject}
+                onChange={(event) => setDraft({ ...draft, subject: event.target.value })}
+                required
+              />
             </label>
             <label className={s.field}>
               <span>Максимум часов</span>
@@ -238,17 +262,33 @@ export function YearScheduleForm({
             </div>
             <label className={s.field}>
               <span>Преподаватель</span>
-              <input value={draft.teacher} onChange={(event) => setDraft({ ...draft, teacher: event.target.value })} required />
+              <input
+                value={draft.teacher}
+                onChange={(event) => setDraft({ ...draft, teacher: event.target.value })}
+                required
+              />
             </label>
             <label className={s.field}>
               <span>Кабинет</span>
-              <input value={draft.room} onChange={(event) => setDraft({ ...draft, room: event.target.value })} required />
+              <input
+                value={draft.room}
+                onChange={(event) => setDraft({ ...draft, room: event.target.value })}
+                required
+              />
             </label>
             <div className={`${s.field} ${s.full}`}>
               <span>Группа</span>
               <div className={s.groupRow}>
-                <input value={draft.group} onChange={(event) => setDraft({ ...draft, group: event.target.value })} required />
-                <button type="button" className={s.secondaryBtn} onClick={() => setGroupsOpen((value) => !value)}>
+                <input
+                  value={draft.group}
+                  onChange={(event) => setDraft({ ...draft, group: event.target.value })}
+                  required
+                />
+                <button
+                  type="button"
+                  className={s.secondaryBtn}
+                  onClick={() => setGroupsOpen((value) => !value)}
+                >
                   <Users data-icon="inline-start" />
                   Выбрать группу
                 </button>
@@ -273,7 +313,12 @@ export function YearScheduleForm({
             </div>
             <label className={s.field}>
               <span>Дата начала пары</span>
-              <input type="date" value={draft.startDate} onChange={(event) => setDraft({ ...draft, startDate: event.target.value })} required />
+              <input
+                type="date"
+                value={draft.startDate}
+                onChange={(event) => setDraft({ ...draft, startDate: event.target.value })}
+                required
+              />
             </label>
           </div>
 
@@ -281,7 +326,10 @@ export function YearScheduleForm({
             <div className={s.blockHead}>
               <div>
                 <h3>Шаблон недели</h3>
-                <p>Выберите конкретные пары по дням. Можно поставить несколько пар одного предмета в один день.</p>
+                <p>
+                  Выберите конкретные пары по дням. Можно поставить несколько пар одного предмета в
+                  один день.
+                </p>
               </div>
               <div className={s.patternStat}>{weeklySlots.length} пар в неделю</div>
             </div>
@@ -291,7 +339,9 @@ export function YearScheduleForm({
                   <div className={s.patternDayName}>{day.label}</div>
                   <div className={s.slotGrid}>
                     {LESSON_SLOTS.map((slot) => {
-                      const active = weeklySlots.some((item) => item.day === day.key && item.time === slot.start);
+                      const active = weeklySlots.some(
+                        (item) => item.day === day.key && item.time === slot.start,
+                      );
                       return (
                         <button
                           type="button"
@@ -335,22 +385,47 @@ export function YearScheduleForm({
               <button
                 type="button"
                 className={s.secondaryBtn}
-                onClick={() => setDraft((current) => ({ ...current, holidays: Array.from(new Set([...current.holidays, ...getKazakhstanHolidayPreset(current.startDate)])).sort() }))}
+                onClick={() =>
+                  setDraft((current) => ({
+                    ...current,
+                    holidays: Array.from(
+                      new Set([
+                        ...current.holidays,
+                        ...getKazakhstanHolidayPreset(current.startDate),
+                      ]),
+                    ).sort(),
+                  }))
+                }
               >
                 <CalendarDays data-icon="inline-start" />
                 Праздники РК
               </button>
             </div>
             <div className={s.inlineAdd}>
-              <input type="date" value={holidayDate} onChange={(event) => setHolidayDate(event.target.value)} />
-              <button type="button" className={s.secondaryBtn} onClick={() => addHoliday(holidayDate)}>
+              <input
+                type="date"
+                value={holidayDate}
+                onChange={(event) => setHolidayDate(event.target.value)}
+              />
+              <button
+                type="button"
+                className={s.secondaryBtn}
+                onClick={() => addHoliday(holidayDate)}
+              >
                 <Plus data-icon="inline-start" />
                 Добавить
               </button>
             </div>
             <div className={s.chips}>
               {draft.holidays.map((date) => (
-                <button type="button" key={date} className={s.chip} onClick={() => setDraft({ ...draft, holidays: draft.holidays.filter((item) => item !== date) })}>
+                <button
+                  type="button"
+                  key={date}
+                  className={s.chip}
+                  onClick={() =>
+                    setDraft({ ...draft, holidays: draft.holidays.filter((item) => item !== date) })
+                  }
+                >
                   {date} ×
                 </button>
               ))}
@@ -366,8 +441,16 @@ export function YearScheduleForm({
               </div>
             </div>
             <div className={s.inlineAdd}>
-              <input type="date" value={practiceStart} onChange={(event) => setPracticeStart(event.target.value)} />
-              <input type="date" value={practiceEnd} onChange={(event) => setPracticeEnd(event.target.value)} />
+              <input
+                type="date"
+                value={practiceStart}
+                onChange={(event) => setPracticeStart(event.target.value)}
+              />
+              <input
+                type="date"
+                value={practiceEnd}
+                onChange={(event) => setPracticeEnd(event.target.value)}
+              />
               <button type="button" className={s.secondaryBtn} onClick={addPractice}>
                 <Plus data-icon="inline-start" />
                 Добавить
@@ -379,12 +462,21 @@ export function YearScheduleForm({
                   type="button"
                   key={`${range.start}-${range.end}-${index}`}
                   className={s.chip}
-                  onClick={() => setDraft({ ...draft, practiceRanges: draft.practiceRanges.filter((_, itemIndex) => itemIndex !== index) })}
+                  onClick={() =>
+                    setDraft({
+                      ...draft,
+                      practiceRanges: draft.practiceRanges.filter(
+                        (_, itemIndex) => itemIndex !== index,
+                      ),
+                    })
+                  }
                 >
                   {range.start} - {range.end} ×
                 </button>
               ))}
-              {draft.practiceRanges.length === 0 && <span className={s.muted}>Пока не выбрано</span>}
+              {draft.practiceRanges.length === 0 && (
+                <span className={s.muted}>Пока не выбрано</span>
+              )}
             </div>
           </section>
 
@@ -416,7 +508,10 @@ export function YearScheduleForm({
               <article key={plan.id} className={s.planCard}>
                 <div>
                   <strong>{plan.subject}</strong>
-                  <span>{plan.teacher} · {plan.group} · {plan.lessonIds.length} пар · {slots.length} пар в неделю</span>
+                  <span>
+                    {plan.teacher} · {plan.group} · {plan.lessonIds.length} пар · {slots.length} пар
+                    в неделю
+                  </span>
                 </div>
                 <div className={s.planActions}>
                   <button type="button" className={s.smallBtn} onClick={() => editPlan(plan)}>
@@ -427,7 +522,8 @@ export function YearScheduleForm({
                     type="button"
                     className={`${s.smallBtn} ${s.dangerBtn}`}
                     onClick={() => {
-                      if (confirm("Удалить предмет и все созданные для него занятия?")) onDelete(plan.id);
+                      if (confirm("Удалить предмет и все созданные для него занятия?"))
+                        onDelete(plan.id);
                     }}
                   >
                     <Trash2 data-icon="inline-start" />

@@ -170,7 +170,7 @@ function normalizeTeacherInput(input: TeacherInput): TeacherInput | null {
   return clean;
 }
 
-function normalizeSavedTeachers(value: unknown) {
+function normalizeSavedTeachers(value: unknown): TeacherRecord[] | null {
   if (!Array.isArray(value)) return null;
 
   return value
@@ -183,7 +183,7 @@ function normalizeSavedTeachers(value: unknown) {
           name,
           groups: DEFAULT_GROUPS,
           createdAt: new Date().toISOString(),
-        };
+        } satisfies TeacherRecord;
       }
 
       if (!item || typeof item !== "object") return null;
@@ -194,12 +194,13 @@ function normalizeSavedTeachers(value: unknown) {
       });
       if (!clean) return null;
 
-      return {
+      const teacher: TeacherRecord = {
         ...clean,
         id: String(source.id || crypto.randomUUID()),
         createdAt: String(source.createdAt || new Date().toISOString()),
-        updatedAt: source.updatedAt ? String(source.updatedAt) : undefined,
       };
+      if (source.updatedAt) teacher.updatedAt = String(source.updatedAt);
+      return teacher;
     })
     .filter((item): item is TeacherRecord => Boolean(item));
 }
@@ -226,7 +227,7 @@ function getRoomsFromSavedTemplates(value: unknown) {
     .filter(Boolean);
 }
 
-function normalizeSavedTemplates(value: unknown) {
+function normalizeSavedTemplates(value: unknown): LessonTemplate[] | null {
   if (!Array.isArray(value)) return null;
 
   return value
@@ -240,12 +241,13 @@ function normalizeSavedTemplates(value: unknown) {
       });
 
       if (!clean) return null;
-      return {
+      const template: LessonTemplate = {
         ...clean,
         id: String(source.id || crypto.randomUUID()),
         createdAt: String(source.createdAt || new Date().toISOString()),
-        updatedAt: source.updatedAt ? String(source.updatedAt) : undefined,
       };
+      if (source.updatedAt) template.updatedAt = String(source.updatedAt);
+      return template;
     })
     .filter((item): item is LessonTemplate => Boolean(item));
 }
