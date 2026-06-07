@@ -76,52 +76,22 @@ const TEACHERS_KEY = "schedule.teachers";
 const ROOMS_KEY = "schedule.rooms";
 const LESSON_TEMPLATES_KEY = "schedule.lessonTemplates";
 const VERSION_KEY = "schedule.version";
-const DATA_VERSION = "2";
-const DEFAULT_GROUPS = ["ИС-21", "ИС-22", "ПО-21", "ВТ-21"];
-const DEFAULT_TEACHERS: TeacherRecord[] = [
-  {
-    id: "teacher-mustafina",
-    name: "Мустафина А.К.",
-    groups: ["ИС-21", "ИС-22"],
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    id: "teacher-ivanov",
-    name: "Иванов С.П.",
-    groups: ["ИС-21", "ПО-21"],
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    id: "teacher-sadykova",
-    name: "Садыкова М.Н.",
-    groups: ["ИС-22", "ВТ-21"],
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-];
-const DEFAULT_ROOMS = ["204", "212", "301"];
-const DEFAULT_LESSON_TEMPLATES: LessonTemplate[] = [
-  {
-    id: "template-programming",
-    subject: "Программирование",
-    group: "ИС-21",
-    semesterHours: 90,
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    id: "template-math",
-    subject: "Математика",
-    group: "ИС-21",
-    semesterHours: 72,
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-  {
-    id: "template-database",
-    subject: "Базы данных",
-    group: "ИС-22",
-    semesterHours: 60,
-    createdAt: "2026-01-01T00:00:00.000Z",
-  },
-];
+const DATA_VERSION = "3";
+const DEFAULT_GROUPS: string[] = [];
+const DEFAULT_TEACHERS: TeacherRecord[] = [];
+const DEFAULT_ROOMS: string[] = [];
+const DEFAULT_LESSON_TEMPLATES: LessonTemplate[] = [];
+const LEGACY_DEFAULT_GROUPS = new Set(["ИС-21", "ИС-22", "ПО-21", "ВТ-21"]);
+const LEGACY_DEFAULT_TEACHER_IDS = new Set([
+  "teacher-mustafina",
+  "teacher-ivanov",
+  "teacher-sadykova",
+]);
+const LEGACY_DEFAULT_TEMPLATE_IDS = new Set([
+  "template-programming",
+  "template-math",
+  "template-database",
+]);
 
 type Ctx = {
   lessons: Lesson[];
@@ -157,6 +127,24 @@ const ScheduleContext = createContext<Ctx | null>(null);
 function uniqueSorted(values: string[]) {
   return Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))).sort((a, b) =>
     a.localeCompare(b),
+  );
+}
+
+function withoutLegacyDefaultGroups(values: string[]) {
+  return uniqueSorted(values).filter((group) => !LEGACY_DEFAULT_GROUPS.has(group));
+}
+
+function withoutLegacyDefaultTeachers(teachers: TeacherRecord[]) {
+  return teachers
+    .filter((teacher) => !LEGACY_DEFAULT_TEACHER_IDS.has(teacher.id))
+    .map((teacher) => ({ ...teacher, groups: withoutLegacyDefaultGroups(teacher.groups) }))
+    .filter((teacher) => teacher.groups.length > 0);
+}
+
+function withoutLegacyDefaultTemplates(templates: LessonTemplate[]) {
+  return templates.filter(
+    (template) =>
+      !LEGACY_DEFAULT_TEMPLATE_IDS.has(template.id) && !LEGACY_DEFAULT_GROUPS.has(template.group),
   );
 }
 
@@ -236,7 +224,7 @@ function normalizeSavedTemplates(value: unknown): LessonTemplate[] | null {
       const source = item as Partial<LessonTemplate>;
       const clean = normalizeTemplateInput({
         subject: String(source.subject ?? ""),
-        group: String(source.group ?? DEFAULT_GROUPS[0]),
+        group: String(source.group ?? ""),
         semesterHours: Number(source.semesterHours ?? 0),
       });
 
@@ -268,20 +256,6 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     const version = localStorage.getItem(VERSION_KEY);
     if (version !== DATA_VERSION) {
       localStorage.setItem(VERSION_KEY, DATA_VERSION);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-      localStorage.setItem(PLANS_KEY, JSON.stringify([]));
-      localStorage.setItem(GROUPS_KEY, JSON.stringify(DEFAULT_GROUPS));
-      localStorage.setItem(TEACHERS_KEY, JSON.stringify(DEFAULT_TEACHERS));
-      localStorage.setItem(ROOMS_KEY, JSON.stringify(DEFAULT_ROOMS));
-      localStorage.setItem(LESSON_TEMPLATES_KEY, JSON.stringify(DEFAULT_LESSON_TEMPLATES));
-      setLessons([]);
-      setPlans([]);
-      setGroups(DEFAULT_GROUPS);
-      setTeachers(DEFAULT_TEACHERS);
-      setRooms(DEFAULT_ROOMS);
-      setLessonTemplates(DEFAULT_LESSON_TEMPLATES);
-      setHydrated(true);
-      return;
     }
 
     const rawLessons = localStorage.getItem(STORAGE_KEY);
@@ -306,7 +280,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     if (rawGroups) {
       try {
         const saved = JSON.parse(rawGroups) as string[];
-        setGroups(uniqueSorted([...DEFAULT_GROUPS, ...saved]));
+        setGroups(withoutLegacyDefaultGroups([...DEFAULT_GROUPS, ...saved.map(String)]));
       } catch {
         /* ignore broken storage */
       }
@@ -316,7 +290,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
     if (rawTeachers) {
       try {
         const saved = normalizeSavedTeachers(JSON.parse(rawTeachers));
-        if (saved) setTeachers(saved);
+        if (saved) setTeachers(withoutLegacyDefaultTeachers(saved));
       } catch {
         /* ignore broken storage */
       }
@@ -329,7 +303,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(rawTemplates);
         savedTemplateRooms = getRoomsFromSavedTemplates(parsed);
         const saved = normalizeSavedTemplates(parsed);
-        if (saved) setLessonTemplates(saved);
+        if (saved) setLessonTemplates(withoutLegacyDefaultTemplates(saved));
       } catch {
         /* ignore broken storage */
       }

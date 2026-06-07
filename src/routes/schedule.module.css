@@ -66,6 +66,10 @@
 }
 
 .secondaryBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   padding: 0.6rem 1.1rem;
   border-radius: 8px;
   background: var(--color-secondary);
@@ -78,6 +82,17 @@
 
 .secondaryBtn:hover {
   background: var(--color-accent);
+}
+
+.secondaryBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.secondaryBtn svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
 }
 
 .generationNotice {

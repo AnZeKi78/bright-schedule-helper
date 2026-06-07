@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { FileDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
@@ -24,6 +25,7 @@ import { ScheduleTable } from "@/components/ScheduleTable/ScheduleTable";
 import { ScheduleForm } from "@/components/ScheduleForm/ScheduleForm";
 import { YearScheduleForm } from "@/components/YearScheduleForm/YearScheduleForm";
 import { SemesterGenerationPanel } from "@/components/SemesterGenerationPanel/SemesterGenerationPanel";
+import { ScheduleDocxDialog } from "@/components/ScheduleDocxDialog/ScheduleDocxDialog";
 import { ConflictDialog } from "@/components/ConflictDialog/ConflictDialog";
 import s from "./schedule.module.css";
 
@@ -69,6 +71,7 @@ function SchedulePage() {
   const [open, setOpen] = useState(false);
   const [yearOpen, setYearOpen] = useState(false);
   const [semesterOpen, setSemesterOpen] = useState(false);
+  const [docxOpen, setDocxOpen] = useState(false);
   const [pendingConflict, setPendingConflict] = useState<PendingConflict | null>(null);
   const [generationResult, setGenerationResult] = useState<SemesterGenerationResult | null>(null);
 
@@ -291,6 +294,19 @@ function SchedulePage() {
             >
               Сгенерировать расписание на семестр
             </button>
+            {lessons.length > 0 && (
+              <button
+                className={s.secondaryBtn}
+                onClick={() => setDocxOpen(true)}
+                disabled={groups.length === 0}
+                title={
+                  groups.length === 0 ? "Добавьте хотя бы одну группу во вкладке Данные" : undefined
+                }
+              >
+                <FileDown />
+                Сохранить в DOCX
+              </button>
+            )}
             <button className={s.secondaryBtn} onClick={() => setYearOpen(true)}>
               + {t("schedule.createYear")}
             </button>
@@ -368,6 +384,10 @@ function SchedulePage() {
           onClose={() => setSemesterOpen(false)}
           onGenerate={generateSemesterSchedule}
         />
+      )}
+
+      {docxOpen && (
+        <ScheduleDocxDialog lessons={lessons} groups={groups} onClose={() => setDocxOpen(false)} />
       )}
 
       {pendingConflict && (
