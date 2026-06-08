@@ -1,0 +1,361 @@
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.92rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.stat {
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "icon value"
+    "icon label";
+  column-gap: 0.75rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+}
+
+.stat svg {
+  grid-area: icon;
+  width: 22px;
+  height: 22px;
+  color: var(--color-primary);
+}
+
+.stat span {
+  grid-area: value;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+
+.stat small {
+  grid-area: label;
+  color: var(--color-muted-foreground);
+  font-size: 0.78rem;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.panel,
+.lessonPanel {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  padding: 1rem;
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.panelHead h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.addRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.55rem;
+  margin-bottom: 0.8rem;
+}
+
+.addRow input,
+.teacherForm input,
+.renameInput,
+.lessonForm input,
+.lessonForm select {
+  min-height: 38px;
+  width: 100%;
+  padding: 0 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+}
+
+.addRow input:focus,
+.teacherForm input:focus,
+.renameInput:focus,
+.lessonForm input:focus,
+.lessonForm select:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.itemRow {
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.45rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-secondary) 36%, transparent);
+  font-weight: 600;
+}
+
+.itemMain {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.itemMain span {
+  overflow-wrap: anywhere;
+}
+
+.itemMain small {
+  color: var(--color-muted-foreground);
+  font-size: 0.76rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.itemActions,
+.rowActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+}
+
+.iconBtn,
+.primaryBtn,
+.secondaryBtn,
+.squareBtn {
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  color: var(--color-foreground);
+}
+
+.iconBtn,
+.secondaryBtn {
+  min-height: 38px;
+  padding: 0 0.85rem;
+  background: var(--color-secondary);
+}
+
+.primaryBtn {
+  min-height: 38px;
+  padding: 0 0.95rem;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.squareBtn {
+  width: 34px;
+  height: 34px;
+  background: var(--color-background);
+}
+
+.iconBtn:hover,
+.secondaryBtn:hover,
+.squareBtn:hover {
+  background: var(--color-accent);
+}
+
+.primaryBtn:hover {
+  opacity: 0.92;
+}
+
+.dangerBtn {
+  color: var(--color-destructive);
+  border-color: color-mix(in srgb, var(--color-destructive) 35%, var(--color-border));
+}
+
+.iconBtn svg,
+.primaryBtn svg,
+.secondaryBtn svg,
+.squareBtn svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.teacherForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+  margin-bottom: 0.8rem;
+}
+
+.groupSelect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.groupChip {
+  min-height: 32px;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.groupChip:hover {
+  background: var(--color-accent);
+}
+
+.groupChipActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.lessonForm {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, 0.45fr) minmax(120px, 0.35fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-secondary) 35%, transparent);
+  margin-bottom: 1rem;
+}
+
+.lessonForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 520px;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+
+.table th {
+  color: var(--color-muted-foreground);
+  background: var(--color-secondary);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-muted-foreground);
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 980px) {
+  .stats,
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lessonForm {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .stats,
+  .columns,
+  .lessonForm,
+  .addRow,
+  .itemRow {
+    grid-template-columns: 1fr;
+  }
+
+  .itemActions,
+  .rowActions {
+    justify-content: flex-start;
+  }
+}

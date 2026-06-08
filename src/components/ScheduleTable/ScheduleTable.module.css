@@ -29,6 +29,43 @@
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr:hover { background: color-mix(in srgb, var(--color-secondary) 50%, transparent); }
 
+.weekRow td {
+  padding: 0.8rem 1rem;
+  background: color-mix(in srgb, var(--color-primary) 13%, var(--color-card));
+  color: var(--color-foreground);
+  border-top: 2px solid color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.dayRow td {
+  padding: 0.55rem 1rem;
+  background: color-mix(in srgb, var(--color-secondary) 70%, var(--color-card));
+  color: var(--color-muted-foreground);
+  border-bottom: 1px solid var(--color-border);
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.weekRow:hover,
+.dayRow:hover {
+  background: transparent;
+}
+
+.noLessonRow td {
+  padding: 0.7rem 1rem;
+  color: var(--color-muted-foreground);
+  font-style: italic;
+  background: color-mix(in srgb, var(--color-card) 86%, var(--color-secondary));
+}
+
+.noLessonRow:hover td {
+  background: color-mix(in srgb, var(--color-card) 86%, var(--color-secondary));
+}
+
 .teacherCell {
   display: inline-flex;
   align-items: center;

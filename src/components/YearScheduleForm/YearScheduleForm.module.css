@@ -1,0 +1,389 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, black 55%, transparent);
+  display: grid;
+  place-items: center;
+  z-index: 60;
+  padding: 1rem;
+}
+
+.modal {
+  width: min(980px, 100%);
+  max-height: min(92vh, 860px);
+  overflow: auto;
+  background: var(--color-card);
+  color: var(--color-card-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  box-shadow: 0 30px 70px -25px rgba(0, 0, 0, 0.45);
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.subtitle {
+  margin: 0.35rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.9rem;
+}
+
+.closeBtn {
+  border: 1px solid var(--color-border);
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+  border-radius: 6px;
+  min-width: 36px;
+  min-height: 36px;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--color-muted-foreground);
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.inlineAdd input {
+  min-height: 38px;
+  padding: 0 0.7rem;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.field input:focus,
+.field select:focus,
+.inlineAdd input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+.calculator {
+  min-height: 38px;
+  align-self: end;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-secondary);
+  font-size: 0.88rem;
+  color: var(--color-foreground);
+}
+
+.calculator strong {
+  color: var(--color-muted-foreground);
+}
+
+.groupRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem;
+}
+
+.secondaryBtn,
+.primaryBtn,
+.smallBtn,
+.chip,
+.groupOption {
+  border-radius: 8px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondaryBtn,
+.smallBtn {
+  min-height: 38px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-secondary);
+  color: var(--color-foreground);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.primaryBtn {
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.dangerBtn {
+  color: var(--color-destructive);
+  border-color: color-mix(in srgb, var(--color-destructive) 35%, var(--color-border));
+}
+
+.groupPanel,
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.groupPanel {
+  padding: 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-secondary) 55%, transparent);
+}
+
+.groupOption,
+.chip {
+  min-height: 32px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-foreground);
+}
+
+.groupOptionActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.dateBlock,
+.planList {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--color-secondary) 35%, transparent);
+}
+
+.blockHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+}
+
+.blockHead h3,
+.planList h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.blockHead p {
+  margin: 0.25rem 0 0;
+  color: var(--color-muted-foreground);
+  font-size: 0.84rem;
+}
+
+.patternStat {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.patternGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.patternDay {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.patternDayName {
+  color: var(--color-foreground);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.slotBtn {
+  min-height: 54px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.15rem;
+  font-family: inherit;
+  font-weight: 700;
+}
+
+.slotBtn small {
+  color: var(--color-muted-foreground);
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.slotBtn:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+}
+
+.slotBtnActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+.slotBtnActive small {
+  color: color-mix(in srgb, var(--color-primary-foreground) 82%, transparent);
+}
+
+.patternSummary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+
+.patternChip {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--color-primary) 9%, var(--color-card));
+  color: var(--color-foreground);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.inlineAdd {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+}
+
+.muted {
+  color: var(--color-muted-foreground);
+  font-size: 0.88rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.planList {
+  margin-top: 1rem;
+}
+
+.planCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.planCard strong,
+.planCard span {
+  display: block;
+}
+
+.planCard span {
+  margin-top: 0.25rem;
+  color: var(--color-muted-foreground);
+  font-size: 0.86rem;
+}
+
+.planActions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .grid,
+  .groupRow {
+    grid-template-columns: 1fr;
+  }
+
+  .blockHead,
+  .planCard,
+  .patternDay {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .patternDay {
+    display: flex;
+  }
+
+  .slotGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actions,
+  .planActions {
+    justify-content: stretch;
+  }
+}

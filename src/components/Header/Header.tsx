@@ -1,9 +1,10 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
-import { jsDayToKey, useSchedule } from "@/lib/schedule-store";
+import { useSchedule } from "@/lib/schedule-store";
+import { getSiteNow, SITE_TIME_CITY, SITE_TIME_UTC_OFFSET } from "@/lib/site-time";
 import s from "./Header.module.css";
 
 function initials(name: string) {
@@ -22,24 +23,28 @@ export function Header() {
   const { user, logout } = useAuth();
   const { lessons } = useSchedule();
   const { location } = useRouterState();
+  const [siteNow, setSiteNow] = useState(() => getSiteNow());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setSiteNow(getSiteNow()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const today = useMemo(() => {
-    const dayKey = jsDayToKey(new Date().getDay());
-    let visible = lessons.filter((l) => l.day === dayKey);
+    let visible = lessons.filter((lesson) =>
+      lesson.date ? lesson.date === siteNow.isoDate : lesson.day === siteNow.dayKey,
+    );
     if (user?.role === "teacher" && user.subjects.length > 0) {
       visible = visible.filter((l) => user.subjects.includes(l.subject));
     }
     visible.sort((a, b) => a.time.localeCompare(b.time));
     return visible;
-  }, [lessons, user]);
+  }, [lessons, siteNow.dayKey, siteNow.isoDate, user]);
 
-  const next = today.find((l) => l.time >= new Date().toTimeString().slice(0, 5)) ?? today[0];
+  const next = today.find((l) => l.time >= siteNow.time) ?? today[0];
 
   const navItem = (to: string, label: string) => (
-    <Link
-      to={to}
-      className={`${s.navLink} ${location.pathname === to ? s.navLinkActive : ""}`}
-    >
+    <Link to={to} className={`${s.navLink} ${location.pathname === to ? s.navLinkActive : ""}`}>
       {label}
     </Link>
   );
@@ -55,12 +60,16 @@ export function Header() {
         <nav className={s.nav}>
           {navItem("/", t("nav.dashboard"))}
           {navItem("/schedule", t("nav.schedule"))}
-          {user?.role === "admin" && navItem("/admin", t("nav.admin"))}
+          {user?.role === "admin" && navItem("/data", t("nav.data"))}
+          {navItem("/faq", t("nav.faq"))}
         </nav>
 
         <div className={s.right}>
-          <div className={s.todayBadge} title={t("header.today")}>
+          <div className={s.todayBadge} title={`${SITE_TIME_CITY} · ${SITE_TIME_UTC_OFFSET}`}>
             <span className={s.todayDot} />
+            <span className={s.todayTime}>
+              {SITE_TIME_CITY} {siteNow.time}
+            </span>
             <span className={s.todayCount}>{today.length}</span>
             <span className={s.todayMuted}>
               {today.length === 0

@@ -1,31 +1,79 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { FileDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { useSchedule, type Lesson } from "@/lib/schedule-store";
+import {
+  findScheduleConflicts,
+  uniqueConflictLessonIds,
+  type ScheduleConflict,
+} from "@/lib/schedule-conflicts";
+import { getLessonEndTime, LESSON_SLOTS } from "@/lib/lesson-slots";
+import {
+  schedule,
+  type SchedulePlanInput,
+  type SemesterGenerationInput,
+} from "@/lib/schedule-generator";
+import {
+  jsDayToKey,
+  useSchedule,
+  type Lesson,
+  type SemesterGenerationResult,
+} from "@/lib/schedule-store";
 import { Filters, emptyFilters, type FilterState } from "@/components/Filters/Filters";
 import { ScheduleTable } from "@/components/ScheduleTable/ScheduleTable";
 import { ScheduleForm } from "@/components/ScheduleForm/ScheduleForm";
-import { UploadExcel } from "@/components/UploadExcel/UploadExcel";
+import { YearScheduleForm } from "@/components/YearScheduleForm/YearScheduleForm";
+import { SemesterGenerationPanel } from "@/components/SemesterGenerationPanel/SemesterGenerationPanel";
+import { ScheduleDocxDialog } from "@/components/ScheduleDocxDialog/ScheduleDocxDialog";
+import { ConflictDialog } from "@/components/ConflictDialog/ConflictDialog";
 import s from "./schedule.module.css";
 
 export const Route = createFileRoute("/schedule")({
   head: () => ({
     meta: [
       { title: "Расписание — управление занятиями" },
-      { name: "description", content: "Просмотр, фильтрация и редактирование расписания преподавателей" },
+      {
+        name: "description",
+        content: "Просмотр, фильтрация и редактирование расписания преподавателей",
+      },
     ],
   }),
   component: SchedulePage,
 });
 
+type PendingConflict =
+  | { kind: "addLesson"; lesson: Omit<Lesson, "id">; conflicts: ScheduleConflict[] }
+  | { kind: "updateLesson"; lesson: Lesson; conflicts: ScheduleConflict[] }
+  | { kind: "createPlan"; input: SchedulePlanInput; conflicts: ScheduleConflict[] }
+  | { kind: "updatePlan"; id: string; input: SchedulePlanInput; conflicts: ScheduleConflict[] };
+
 function SchedulePage() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const { lessons, add, update, remove } = useSchedule();
+  const {
+    lessons,
+    plans,
+    groups,
+    teachers: dataTeachers,
+    rooms,
+    lessonTemplates,
+    add,
+    update,
+    remove,
+    createPlan,
+    updatePlan,
+    removePlan,
+    generateSemester,
+  } = useSchedule();
   const [filters, setFilters] = useState<FilterState>(emptyFilters);
   const [editing, setEditing] = useState<Lesson | null>(null);
   const [open, setOpen] = useState(false);
+  const [yearOpen, setYearOpen] = useState(false);
+  const [semesterOpen, setSemesterOpen] = useState(false);
+  const [docxOpen, setDocxOpen] = useState(false);
+  const [pendingConflict, setPendingConflict] = useState<PendingConflict | null>(null);
+  const [generationResult, setGenerationResult] = useState<SemesterGenerationResult | null>(null);
 
   const canModify = user?.role === "admin";
 
@@ -37,23 +85,193 @@ function SchedulePage() {
     return lessons;
   }, [lessons, user]);
 
-  const teachers = useMemo(() => Array.from(new Set(scoped.map((l) => l.teacher))).sort(), [scoped]);
-  const subjects = useMemo(() => Array.from(new Set(scoped.map((l) => l.subject))).sort(), [scoped]);
+  const teachers = useMemo(
+    () => Array.from(new Set(scoped.map((l) => l.teacher))).sort(),
+    [scoped],
+  );
+  const subjects = useMemo(
+    () => Array.from(new Set(scoped.map((l) => l.subject))).sort(),
+    [scoped],
+  );
 
   // 2) Применяем фильтры и сортировку
   const rows = useMemo(() => {
     const dayOrder = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6, sun: 7 } as const;
+    if (!filters.group) return [];
     return scoped
+      .filter((l) => l.group === filters.group)
       .filter((l) => !filters.teacher || l.teacher === filters.teacher)
       .filter((l) => !filters.subject || l.subject === filters.subject)
       .filter((l) => !filters.day || l.day === filters.day)
       .filter((l) => {
         if (!filters.query.trim()) return true;
         const q = filters.query.toLowerCase();
-        return [l.teacher, l.subject, l.room, l.group].some((x) => x.toLowerCase().includes(q));
+        return [l.teacher, l.subject, l.room, l.group, l.date ?? ""].some((x) =>
+          x.toLowerCase().includes(q),
+        );
       })
-      .sort((a, b) => dayOrder[a.day] - dayOrder[b.day] || a.time.localeCompare(b.time));
+      .sort(
+        (a, b) =>
+          (a.date ?? "").localeCompare(b.date ?? "") ||
+          dayOrder[a.day] - dayOrder[b.day] ||
+          a.time.localeCompare(b.time),
+      );
   }, [scoped, filters]);
+
+  const findRelocationSlot = (lesson: Lesson, occupied: Lesson[]) => {
+    for (const slot of LESSON_SLOTS) {
+      const candidate = { ...lesson, time: slot.start, endTime: slot.end, durationMinutes: 90 };
+      const conflicts = findScheduleConflicts({ candidates: [candidate], lessons: occupied });
+      if (conflicts.length === 0) return candidate;
+    }
+    return null;
+  };
+
+  const getNewLessonsForPendingConflict = (pending: PendingConflict): Omit<Lesson, "id">[] => {
+    if (pending.kind === "addLesson") return [pending.lesson];
+    if (pending.kind === "updateLesson") return [pending.lesson];
+    if (pending.kind === "createPlan") return schedule(pending.input);
+    return schedule(pending.input);
+  };
+
+  const getReplacementExcludedIds = (pending: PendingConflict, movingIds: string[]) => {
+    const excluded = new Set(movingIds);
+    if (pending.kind === "updateLesson") excluded.add(pending.lesson.id);
+    if (pending.kind === "updatePlan") {
+      for (const lesson of lessons) {
+        if (lesson.sourcePlanId === pending.id) excluded.add(lesson.id);
+      }
+    }
+    return excluded;
+  };
+
+  const normalizeManualLesson = (lesson: Omit<Lesson, "id">) => {
+    const normalized = {
+      ...lesson,
+      endTime: lesson.endTime ?? getLessonEndTime(lesson.time, lesson.durationMinutes ?? 90),
+      durationMinutes: lesson.durationMinutes ?? 90,
+    };
+    if (!lesson.date) return normalized;
+    const [year, month, day] = lesson.date.split("-").map(Number);
+    return {
+      ...normalized,
+      day: jsDayToKey(new Date(year, month - 1, day).getDay()),
+    };
+  };
+
+  const saveLesson = (lesson: Omit<Lesson, "id">, current?: Lesson | null) => {
+    const conflicts = findScheduleConflicts({
+      candidates: [lesson],
+      lessons,
+      excludeLessonIds: current ? [current.id] : [],
+    });
+
+    if (conflicts.length > 0) {
+      setPendingConflict(
+        current
+          ? { kind: "updateLesson", lesson: { ...current, ...lesson }, conflicts }
+          : { kind: "addLesson", lesson, conflicts },
+      );
+      return false;
+    }
+
+    if (current) update({ ...current, ...lesson });
+    else add(lesson);
+    return true;
+  };
+
+  const savePlan = (input: SchedulePlanInput, id?: string) => {
+    const generated = schedule(input);
+    const conflicts = findScheduleConflicts({
+      candidates: generated,
+      lessons,
+      excludePlanId: id,
+    });
+
+    if (conflicts.length > 0) {
+      setPendingConflict(
+        id
+          ? { kind: "updatePlan", id, input, conflicts }
+          : { kind: "createPlan", input, conflicts },
+      );
+      return false;
+    }
+
+    if (id) updatePlan(id, input);
+    else createPlan(input);
+    return true;
+  };
+
+  const canGenerateSemester =
+    lessonTemplates.length > 0 &&
+    groups.length > 0 &&
+    dataTeachers.length > 0 &&
+    rooms.length > 0 &&
+    lessonTemplates.every((template) =>
+      dataTeachers.some((teacher) => teacher.groups.includes(template.group)),
+    );
+
+  const generateSemesterSchedule = (input: SemesterGenerationInput) => {
+    const result = generateSemester(input);
+    setGenerationResult(result);
+    setSemesterOpen(false);
+    const firstGroup = groups[0];
+    if (firstGroup) setFilters((current) => ({ ...current, group: current.group || firstGroup }));
+    return result;
+  };
+
+  const replaceConflictingLessons = () => {
+    if (!pendingConflict) return;
+
+    const movingIds = uniqueConflictLessonIds(pendingConflict.conflicts);
+    const excluded = getReplacementExcludedIds(pendingConflict, movingIds);
+    const newLessons = getNewLessonsForPendingConflict(pendingConflict).map((lesson, index) => ({
+      ...lesson,
+      id: `pending-${index}`,
+    }));
+    const occupied: Lesson[] = [
+      ...lessons.filter((lesson) => !excluded.has(lesson.id)),
+      ...newLessons,
+    ];
+    const movedLessons: Lesson[] = [];
+
+    for (const id of movingIds) {
+      const lesson = lessons.find((item) => item.id === id);
+      if (!lesson) continue;
+      const moved = findRelocationSlot(lesson, occupied);
+      if (!moved) {
+        alert(
+          `Не удалось перенести занятие "${lesson.subject}" в свободное время этого же дня. Освободите слот вручную.`,
+        );
+        return;
+      }
+      movedLessons.push(moved);
+      occupied.push(moved);
+    }
+
+    for (const lesson of movedLessons) {
+      update(lesson);
+    }
+
+    if (pendingConflict.kind === "addLesson") {
+      add(pendingConflict.lesson);
+      setOpen(false);
+    }
+    if (pendingConflict.kind === "updateLesson") {
+      update(pendingConflict.lesson);
+      setOpen(false);
+    }
+    if (pendingConflict.kind === "createPlan") {
+      createPlan(pendingConflict.input);
+      setYearOpen(false);
+    }
+    if (pendingConflict.kind === "updatePlan") {
+      updatePlan(pendingConflict.id, pendingConflict.input);
+      setYearOpen(false);
+    }
+
+    setPendingConflict(null);
+  };
 
   return (
     <main className={s.page}>
@@ -63,36 +281,120 @@ function SchedulePage() {
           <p className={s.subtitle}>{t("dashboard.uploadHint")}</p>
         </div>
         {canModify && (
-          <button className={s.addBtn} onClick={() => { setEditing(null); setOpen(true); }}>
-            + {t("schedule.add")}
-          </button>
+          <div className={s.headerActions}>
+            <button
+              className={s.generateBtn}
+              onClick={() => setSemesterOpen(true)}
+              disabled={!canGenerateSemester}
+              title={
+                !canGenerateSemester
+                  ? "Сначала заполните группы, преподавателей, кабинеты и занятия во вкладке Данные"
+                  : undefined
+              }
+            >
+              Сгенерировать расписание на семестр
+            </button>
+            {lessons.length > 0 && (
+              <button
+                className={s.secondaryBtn}
+                onClick={() => setDocxOpen(true)}
+                disabled={groups.length === 0}
+                title={
+                  groups.length === 0 ? "Добавьте хотя бы одну группу во вкладке Данные" : undefined
+                }
+              >
+                <FileDown />
+                Сохранить в DOCX
+              </button>
+            )}
+            <button className={s.secondaryBtn} onClick={() => setYearOpen(true)}>
+              + {t("schedule.createYear")}
+            </button>
+            <button
+              className={s.addBtn}
+              onClick={() => {
+                setEditing(null);
+                setOpen(true);
+              }}
+            >
+              + {t("schedule.add")}
+            </button>
+          </div>
         )}
       </header>
 
-      {canModify && (
-        <section className={s.uploadSection}>
-          <UploadExcel />
-        </section>
+      {generationResult && (
+        <div className={s.generationNotice}>
+          Создано {generationResult.generated} из {generationResult.requested} пар за период{" "}
+          {generationResult.startDate} - {generationResult.endDate}.
+          {generationResult.removed > 0 && ` Заменено занятий: ${generationResult.removed}.`}
+          {generationResult.issues.length > 0 &&
+            ` Не размещено записей: ${generationResult.issues.length}.`}
+        </div>
       )}
 
-      <Filters state={filters} onChange={setFilters} teachers={teachers} subjects={subjects} />
+      <Filters
+        state={filters}
+        onChange={setFilters}
+        teachers={teachers}
+        subjects={subjects}
+        groups={groups}
+      />
 
       <ScheduleTable
         rows={rows}
         canModify={canModify}
-        onEdit={(l) => { setEditing(l); setOpen(true); }}
+        emptyMessage={!filters.group ? "Группа не выбрана" : undefined}
+        onEdit={(l) => {
+          setEditing(l);
+          setOpen(true);
+        }}
         onDelete={(l) => remove(l.id)}
       />
 
       {open && (
         <ScheduleForm
           initial={editing}
+          groups={groups}
           onClose={() => setOpen(false)}
           onSubmit={(d) => {
-            if (editing) update({ ...editing, ...d });
-            else add(d);
-            setOpen(false);
+            const lesson = normalizeManualLesson(d);
+            if (saveLesson(lesson, editing)) setOpen(false);
           }}
+        />
+      )}
+
+      {yearOpen && (
+        <YearScheduleForm
+          groups={groups}
+          plans={plans}
+          onClose={() => setYearOpen(false)}
+          onCreate={(input) => savePlan(input)}
+          onUpdate={(id, input) => savePlan(input, id)}
+          onDelete={removePlan}
+        />
+      )}
+
+      {semesterOpen && (
+        <SemesterGenerationPanel
+          templates={lessonTemplates}
+          groups={groups}
+          teachers={dataTeachers}
+          rooms={rooms}
+          onClose={() => setSemesterOpen(false)}
+          onGenerate={generateSemesterSchedule}
+        />
+      )}
+
+      {docxOpen && (
+        <ScheduleDocxDialog lessons={lessons} groups={groups} onClose={() => setDocxOpen(false)} />
+      )}
+
+      {pendingConflict && (
+        <ConflictDialog
+          conflicts={pendingConflict.conflicts}
+          onCancel={() => setPendingConflict(null)}
+          onReplace={replaceConflictingLessons}
         />
       )}
     </main>

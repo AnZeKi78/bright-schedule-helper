@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DataRouteImport } from './routes/data'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -22,6 +24,16 @@ const ScheduleRoute = ScheduleRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DataRoute = DataRouteImport.update({
+  id: '/data',
+  path: '/data',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -38,12 +50,16 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/data': typeof DataRoute
+  '/faq': typeof FaqRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/data': typeof DataRoute
+  '/faq': typeof FaqRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
 }
@@ -51,20 +67,24 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/data': typeof DataRoute
+  '/faq': typeof FaqRoute
   '/login': typeof LoginRoute
   '/schedule': typeof ScheduleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/login' | '/schedule'
+  fullPaths: '/' | '/admin' | '/data' | '/faq' | '/login' | '/schedule'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/login' | '/schedule'
-  id: '__root__' | '/' | '/admin' | '/login' | '/schedule'
+  to: '/' | '/admin' | '/data' | '/faq' | '/login' | '/schedule'
+  id: '__root__' | '/' | '/admin' | '/data' | '/faq' | '/login' | '/schedule'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  DataRoute: typeof DataRoute
+  FaqRoute: typeof FaqRoute
   LoginRoute: typeof LoginRoute
   ScheduleRoute: typeof ScheduleRoute
 }
@@ -83,6 +103,20 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/data': {
+      id: '/data'
+      path: '/data'
+      fullPath: '/data'
+      preLoaderRoute: typeof DataRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -105,6 +139,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  DataRoute: DataRoute,
+  FaqRoute: FaqRoute,
   LoginRoute: LoginRoute,
   ScheduleRoute: ScheduleRoute,
 }

@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { jsDayToKey, useSchedule } from "@/lib/schedule-store";
+import { useSchedule } from "@/lib/schedule-store";
+import { getSiteNow } from "@/lib/site-time";
 import { ScheduleTable } from "@/components/ScheduleTable/ScheduleTable";
 import s from "./index.module.css";
 
@@ -20,15 +21,20 @@ function Index() {
   const { t } = useI18n();
   const { user } = useAuth();
   const { lessons } = useSchedule();
+  const [siteNow, setSiteNow] = useState(() => getSiteNow());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setSiteNow(getSiteNow()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const today = useMemo(() => {
-    const dk = jsDayToKey(new Date().getDay());
-    let v = lessons.filter((l) => l.day === dk);
+    let v = lessons.filter((l) => (l.date ? l.date === siteNow.isoDate : l.day === siteNow.dayKey));
     if (user?.role === "teacher" && user.subjects.length > 0) {
       v = v.filter((l) => user.subjects.includes(l.subject));
     }
     return v.sort((a, b) => a.time.localeCompare(b.time));
-  }, [lessons, user]);
+  }, [lessons, siteNow.dayKey, siteNow.isoDate, user]);
 
   const uniqueTeachers = new Set(lessons.map((l) => l.teacher)).size;
   const uniqueSubjects = new Set(lessons.map((l) => l.subject)).size;
@@ -42,15 +48,23 @@ function Index() {
         </h1>
         <p className={s.lead}>{t("dashboard.uploadHint")}</p>
         <div className={s.ctaRow}>
-          <Link to="/schedule" className={s.ctaPrimary}>{t("dashboard.cta")}</Link>
-          {!user && <Link to="/login" className={s.ctaSecondary}>{t("nav.login")}</Link>}
+          <Link to="/schedule" className={s.ctaPrimary}>
+            {t("dashboard.cta")}
+          </Link>
+          {!user && (
+            <Link to="/login" className={s.ctaSecondary}>
+              {t("nav.login")}
+            </Link>
+          )}
         </div>
       </section>
 
       <section className={s.stats}>
         <div className={s.statCard}>
           <div className={s.statValue}>{lessons.length}</div>
-          <div className={s.statLabel}>{t("table.subject")} · {t("schedule.title")}</div>
+          <div className={s.statLabel}>
+            {t("table.subject")} · {t("schedule.title")}
+          </div>
         </div>
         <div className={s.statCard}>
           <div className={s.statValue}>{uniqueTeachers}</div>
